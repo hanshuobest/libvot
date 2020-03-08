@@ -1,6 +1,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
+#include <opencv2/xfeatures2d/nonfree.hpp>
 #include <iostream>
 
 #include "libvot_config.h"
@@ -27,13 +28,14 @@ int main( int argc, char** argv )
 	const std::string image_filename = std::string(argv[1]);
 	const std::string feat_filename = tw::IO::SplitPathExt(image_filename).first + ".sift";
 	// load the image in BGR format
-	const cv::Mat input = cv::imread(image_filename, CV_LOAD_IMAGE_COLOR);
+	const cv::Mat input = cv::imread(image_filename);
 
-	cv::SiftDescriptorExtractor cv_sift_detector;
+	//cv::SiftDescriptorExtractor cv_sift_detector;
+	cv::Ptr<cv::xfeatures2d::SIFT> cv_sift_detector = cv::xfeatures2d::SIFT::create();
 	std::vector<cv::KeyPoint> cv_keypoints;
 	cv::Mat sift_descriptors;
-	cv_sift_detector.detect(input, cv_keypoints);
-	cv_sift_detector.compute(input, cv_keypoints, sift_descriptors);
+	cv_sift_detector->detect(input, cv_keypoints);
+	cv_sift_detector->compute(input, cv_keypoints, sift_descriptors);
 	vot::SiftData sift_data;
 	vot::OpencvKeyPoints2libvotSift(cv_keypoints, sift_descriptors, sift_data);
 

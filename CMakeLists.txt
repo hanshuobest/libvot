@@ -50,6 +50,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif(NOT CMAKE_BUILD_TYPE)
 
+set(OpenCV_DIR /usr/local/Cellar/opencv/4.2.0/lib/cmake/opencv4)	
 # ================= Configure libvot dependencies =========================
 if(LIBVOT_USE_OPENCV)
     find_package( OpenCV REQUIRED )

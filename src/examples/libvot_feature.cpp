@@ -60,7 +60,8 @@ extern "C" {
 #ifdef LIBVOT_USE_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
+#include <opencv2/xfeatures2d/nonfree.hpp>
 #else
 #endif
 
@@ -85,7 +86,7 @@ void MultiVlfeatSiftExtract(std::vector<std::string> *image_filenames,
 {
 	size_t end_index = first_index + num_images;
 	for (size_t i = first_index; i < end_index; i++) {
-		const cv::Mat input = cv::imread((*image_filenames)[i], CV_LOAD_IMAGE_COLOR);
+		const cv::Mat input = cv::imread((*image_filenames)[i]);
 		vot::SiftData sift_data;
 		int num_features = vot::RunVlFeature(input.data, input.cols, input.rows, 3, sift_data, *vlfeat_param);
 		if (!sift_data.SaveSiftFile((*feat_filenames)[i])) {
@@ -103,15 +104,16 @@ void MultiOpencvSiftExtract(std::vector<std::string> *image_filenames,
                             int num_images)
 {
 	size_t end_index = first_index + num_images;
-	cv::SiftDescriptorExtractor cv_sift_detector;
+	// cv::SiftDescriptorExtractor cv_sift_detector;
+	cv::Ptr<cv::xfeatures2d::SIFT> cv_sift_detector = cv::xfeatures2d::SIFT::create();
 	for (size_t i = first_index; i < end_index; i++) {
 		// load the image in BGR format
-		const cv::Mat input = cv::imread((*image_filenames)[i], CV_LOAD_IMAGE_COLOR);
+		const cv::Mat input = cv::imread((*image_filenames)[i]);
 
 		std::vector<cv::KeyPoint> cv_keypoints;
 		cv::Mat sift_descriptors;
-		cv_sift_detector.detect(input, cv_keypoints);
-		cv_sift_detector.compute(input, cv_keypoints, sift_descriptors);
+		cv_sift_detector->detect(input, cv_keypoints);
+		cv_sift_detector->compute(input, cv_keypoints, sift_descriptors);
 
 		vot::SiftData sift_data;
 		vot::OpencvKeyPoints2libvotSift(cv_keypoints, sift_descriptors, sift_data);
@@ -220,15 +222,16 @@ int main(int argc, char** argv)
 		{
 			if (FLAGS_thread_num == 1) {
 				LOG(INFO) << "[Extract Feature] Compute SIFT features using opencv sift\n";
-				cv::SiftDescriptorExtractor cv_sift_detector;
+				//cv::SiftDescriptorExtractor cv_sift_detector;
+				cv::Ptr<cv::xfeatures2d::SIFT> cv_sift_detector = cv::xfeatures2d::SIFT::create();
 				for (int i = 0; i < num_images; i++) {
 					// load the image in BGR format
-					const cv::Mat input = cv::imread(image_filenames[i], CV_LOAD_IMAGE_COLOR);
+					const cv::Mat input = cv::imread(image_filenames[i]);
 
 					std::vector<cv::KeyPoint> cv_keypoints;
 					cv::Mat sift_descriptors;
-					cv_sift_detector.detect(input, cv_keypoints);
-					cv_sift_detector.compute(input, cv_keypoints, sift_descriptors);
+					cv_sift_detector->detect(input, cv_keypoints);
+					cv_sift_detector->compute(input, cv_keypoints, sift_descriptors);
 
 					vot::SiftData sift_data;
 					vot::OpencvKeyPoints2libvotSift(cv_keypoints, sift_descriptors, sift_data);
@@ -265,7 +268,7 @@ int main(int argc, char** argv)
 			if (FLAGS_thread_num == 1) {		// single thread version
 				LOG(INFO) << "[Extract Feature] Compute SIFT features using vlfeat sift\n";
 				for (int i = 0; i < num_images; i++) {
-					const cv::Mat input = cv::imread(image_filenames[i], CV_LOAD_IMAGE_COLOR);
+					const cv::Mat input = cv::imread(image_filenames[i]);
 					vot::SiftData sift_data;
 					int num_features = vot::RunVlFeature(input.data, input.cols, input.rows, 3, sift_data, vlfeat_param);
 					if (!sift_data.SaveSiftFile(feat_filenames[i])) {
